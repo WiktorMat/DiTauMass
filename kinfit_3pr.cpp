@@ -94,8 +94,6 @@ map<string, py::array_t<double>> kinfit_3pr(
   double * pz_2_opt = static_cast<double *>(pz_2_buffer.ptr);
   double * chi2_opt = static_cast<double *>(chi2_buffer.ptr);
   
-  unsigned int counter = 0;
-  
   for (unsigned int i=0; i<N; ++i) {  
 
     // 4-vectors of taus
@@ -370,14 +368,7 @@ map<string, py::array_t<double>> kinfit_3pr(
 	}
       }
     }    
-    counter++;
     chi2_opt[i] = min_chi2;
-
-    //    if (counter%100==0 && verbosity) {
-    //      printf("Processed %1i events out of %1i\n",counter,N);
-    //      printf("P1 (X,Y,Z) = %6.1f %6.1f %6.1f\n",px_1_opt[i],py_1_opt[i],pz_1_opt[i]);
-    //      printf("P2 (X,Y,Z) = %6.1f %6.1f %6.1f\n",px_2_opt[i],py_2_opt[i],pz_2_opt[i]);
-    //    }
   }
 
   map<string, py::array_t<double> > results = {

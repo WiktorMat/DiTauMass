@@ -1,13 +1,10 @@
 #! /usr/bin/env python3
 # Author: Alexei Raspereza (December 2024)
-# Plotting macro to test FastMTT
+# Plotting macro to test kinfit
 import ROOT
 import math
-from array import array
+import styles
 import os
-
-import CPHiggs.Analysis.styles as styles
-import CPHiggs.Analysis.utils as utils
 
 def Plot(hist1,hist2,**kwargs):
 

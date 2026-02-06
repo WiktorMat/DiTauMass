@@ -10,7 +10,7 @@
 using namespace std;
 namespace py = pybind11;
 
-map<string, py::array_t<double>> fastmtt_cpp(unsigned int N,
+map<string, py::array_t<double>> fastmtt_cpp(
 					     py::array_t<double> pt_1_vec,
 					     py::array_t<double> eta_1_vec,
 					     py::array_t<double> phi_1_vec,
@@ -26,14 +26,14 @@ map<string, py::array_t<double>> fastmtt_cpp(unsigned int N,
 					     py::array_t<double> metcov_xx_vec,
 					     py::array_t<double> metcov_xy_vec,
 					     py::array_t<double> metcov_yy_vec,
-					     bool verbosity,
-					     double delta,
-					     double reg_order,
 					     double mX,
 					     double widthX) {
+
+  unsigned int N = pt_1_vec.size();
+  
   //  bool verbosity = true;
-  //  double delta=1/1.15;
-  //  double reg_order=6;
+  double delta=1/1.15;
+  double reg_order=6;
   //  double mX = 125.10;  // resonance mass (default 125.10 GeV)
   //  double widthX = 2.5; // mass window, e.g. [mX-widthX,mX+widthX]
   //                       // default half-width is widthX = 2.5 GeV
@@ -91,7 +91,6 @@ map<string, py::array_t<double>> fastmtt_cpp(unsigned int N,
   double * x_2_cons = static_cast<double *>(x_2_cons_buffer.ptr);
   double * mass = static_cast<double *>(mass_buffer.ptr);
   
-  unsigned int counter = 0;
   for (unsigned int i=0; i<N; ++i) {  
 
     
@@ -169,7 +168,7 @@ map<string, py::array_t<double>> fastmtt_cpp(unsigned int N,
     double metcovinv_det = (metcovinv_xx*metcovinv_yy -
 			    metcovinv_yx*metcovinv_xy);
     if (metcovinv_det<1e-10) { 
-      printf("Warning! Ill-conditioned MET covariance at event index");
+      printf("Warning! Ill-conditioned MET covariance at event index %1i",i);
     }
     
     // perform likelihood scan 
@@ -245,7 +244,7 @@ map<string, py::array_t<double>> fastmtt_cpp(unsigned int N,
       double met_transfer = met_const*exp(-0.5*pull2);
       double likelihood = -met_transfer * mass_likelihood * zeroFactor;
 
-      std::cout << i << " x1=" << x1 << " x2=" << x2 << " mass=" << mass_likelihood << "  met=" << met_transfer << std::endl;
+      //      std::cout << i << " x1=" << x1 << " x2=" << x2 << " mass=" << mass_likelihood << "  met=" << met_transfer << std::endl;
 
       if (likelihood < min_likelihood_cons) {
 	min_likelihood_cons = likelihood;
@@ -343,14 +342,6 @@ map<string, py::array_t<double>> fastmtt_cpp(unsigned int N,
     
     mass[i] = m_vis/sqrt(x1_opt*x2_opt);
 
-    if (counter%1000==0 && verbosity) {
-      printf("Processed %1i events out of %1i\n",counter,N);
-      printf("m(vis) = %5.1f   m(tautau) = %5.1f\n",m_vis,mass[i]);
-      printf("no mass constraint   : x1 = %5.3f   x2 = %5.3f\n",x_1[i],x_2[i]);
-      printf("mass window          : x1 = %5.3f   x2 = %5.3f\n",x_1_BW[i],x_2_BW[i]);
-      printf("hard mass constraint : x1 = %5.3f   x2 = %5.3f\n",x_1_cons[i],x_2_cons[i]);
-    }
-    counter++;
   }
 
   map<string, py::array_t<double> > results = {
