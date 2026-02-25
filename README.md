@@ -17,7 +17,7 @@ This package contains the following components:
 
 ```
 cd $CMSSW_BASE/src
-git clone https://github.com/raspereza/DiTauMass.git
+git clone --recurse-submodules https://github.com/raspereza/DiTauMass.git
 cd $CMSSW_BASE/
 scramv1 b -j 4
 ```
@@ -31,9 +31,17 @@ cd $CMSSW_BASE/src/
 
 ## Running test
 
-Example:
+### Evaluating FastMTT:
+Example for tt channel:
 ```
-./check_kinfit.py --channel tt 
+python3 FastMTT/examples/batch_processing.py /eos/cms/store/group/phys_tau/lrussell/forAliaksei/CPSignalStudies/Run3_2022EE/tt/GluGluHTo2Tau_UncorrelatedDecay_SM_Filtered_ProdAndDecay/nominal/merged.root --entry-stop 200000
+```
+
+this will create file merged.root in the working directory.
+
+Then you have to run the test file and give the adress to the file. For example:
+```
+./test_kinfit.py merged.root --channel tt
 ```
 The script will create RooT file named `kinfit_3pr_tt.root` which you can inspect.
 

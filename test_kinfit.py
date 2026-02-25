@@ -11,14 +11,15 @@ def fill_hist(hist, array):
 # Main routine #
 ################
 parser = ArgumentParser()
+parser.add_argument('input',help='input file (ROOT or CSV)')
 parser.add_argument('-channel','--channel',dest='channel',default='tt',choices=['mt','tt'])
 
 args = parser.parse_args()
 
 # location of tuple
-dirname='/eos/cms/store/group/phys_tau/lrussell/forAliaksei/CPSignalStudies/Run3_2022EE'
-filename=dirname+'/'+args.channel+'/GluGluHTo2Tau_UncorrelatedDecay_SM_Filtered_ProdAndDecay/nominal/merged.root'
-filename = '/eos/home-w/wmatyszk/CMSSW_14_2_0_pre2/src/DiTauMass/merged.root'
+# dirname='/eos/cms/store/group/phys_tau/lrussell/forAliaksei/CPSignalStudies/Run3_2022EE'
+# filename=dirname+'/'+args.channel+'/GluGluHTo2Tau_UncorrelatedDecay_SM_Filtered_ProdAndDecay/nominal/merged.root'
+filename = args.input
 # filename = '/eos/home-w/wmatyszk/HiggsDNA/CleanDNA/higgs-dna-waw/combine_test_run/data/nominal.root'
 
 print('')
