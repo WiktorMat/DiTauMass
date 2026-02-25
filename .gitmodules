@@ -1,0 +1,4 @@
+[submodule "FastMTT"]
+	path = FastMTT
+	url = https://github.com/WiktorMat/FastMTT
+	branch = for_kinfit_evaluation

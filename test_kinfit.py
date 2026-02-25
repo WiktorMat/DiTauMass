@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 import numpy as np
-from  KinFit import kinfit_3pr, fastmtt_cpp
+from  KinFit import kinfit_3pr#, fastmtt_cpp
 import ROOT
 from argparse import ArgumentParser
 
@@ -18,6 +18,8 @@ args = parser.parse_args()
 # location of tuple
 dirname='/eos/cms/store/group/phys_tau/lrussell/forAliaksei/CPSignalStudies/Run3_2022EE'
 filename=dirname+'/'+args.channel+'/GluGluHTo2Tau_UncorrelatedDecay_SM_Filtered_ProdAndDecay/nominal/merged.root'
+filename = '/eos/home-w/wmatyszk/CMSSW_14_2_0_pre2/src/DiTauMass/merged.root'
+# filename = '/eos/home-w/wmatyszk/HiggsDNA/CleanDNA/higgs-dna-waw/combine_test_run/data/nominal.root'
 
 print('')
 print('opening file %s'%(filename))    
@@ -30,8 +32,15 @@ if args.channel=='tt':
     cuts += '&&idDeepTau2018v2p5VSe_1>=6&&idDeepTau2018v2p5VSmu_1>=4&&idDeepTau2018v2p5VSjet_1>=7&&pt_1>40.&&pt_2>40.&&fabs(eta_1)<2.5'
     
 print('')
+# get list of all branches in the tree
+all_cols = [str(c) for c in df.GetColumnNames()]
+
+print(f'Found {len(all_cols)} columns')
+
+print('')
 print('reading tuple as numpy columns')
-cols = df.Filter(cuts).AsNumpy(["pt_1","pt_2","eta_1","eta_2","phi_1","phi_2","mass_1","mass_2","met_pt","met_phi","met_covXX","met_covXY","met_covYY","m_vis","sv_x_2","sv_y_2","sv_z_2","sv_cov00_2","sv_cov10_2","sv_cov11_2","sv_cov20_2","sv_cov21_2","sv_cov22_2","genPart_pt_1","genPart_eta_1","genPart_phi_1","genPart_pt_2","PVBS_x","PVBS_y","PVBS_z"])
+
+cols = df.Filter(cuts).AsNumpy(all_cols)
 
 print('')
 print('Length of column : %1i\n'%(len(cols["pt_1"])))
@@ -67,11 +76,11 @@ results = kinfit_3pr(cols["pt_2"],cols["eta_2"],cols["phi_2"],cols["mass_2"],
 ###################
 # calling fastMTT #
 ###################
-results_MTT = fastmtt_cpp(cols["pt_2"],cols["eta_2"],cols["phi_2"],cols["mass_2"],cols['decay_type_1'],
-                          cols["pt_1"],cols["eta_1"],cols["phi_1"],cols["mass_1"],cols['decay_type_2'],
-                          cols["met_pt"],cols["met_phi"],
-                          cols["met_covXX"],cols["met_covXY"],cols["met_covYY"],
-                          mX,width)
+# results_MTT = fastmtt_cpp(cols["pt_2"],cols["eta_2"],cols["phi_2"],cols["mass_2"],cols['decay_type_1'],
+#                           cols["pt_1"],cols["eta_1"],cols["phi_1"],cols["mass_1"],cols['decay_type_2'],
+#                           cols["met_pt"],cols["met_phi"],
+#                           cols["met_covXX"],cols["met_covXY"],cols["met_covYY"],
+#                           mX,width)
 
 ###############################################################
 # accessing results of kinfit_3pr (library: keyword->column)
@@ -92,30 +101,34 @@ chi2 = results['chi2']
 pt1 = np.sqrt(px1**2+py1**2)
 pt2 = np.sqrt(px2**2+py2**2)
 
+# --- store KinFit outputs ---
+cols["KinFit_pt_1"] = pt1
+cols["KinFit_pt_2"] = pt2
+
 ####################################
 #### Accessing results of fastMTT  #
 ####################################
-x1 = results_MTT['x1'] # obtained w/o mass constraint
-x2 = results_MTT['x2'] # obtained w/o mass constraint
+# x1 = results_MTT['x1'] # obtained w/o mass constraint
+# x2 = results_MTT['x2'] # obtained w/o mass constraint
 
-x1_const = results_MTT['x1_BW'] # obtained with mass window cut
-x2_const = results_MTT['x2_BW'] # obtained with mass window cut
+# x1_const = results_MTT['x1_BW'] # obtained with mass window cut
+# x2_const = results_MTT['x2_BW'] # obtained with mass window cut
 
-pt1_fastMTT = cols['pt_1']/x1
-pt2_fastMTT = cols['pt_2']/x2
+# pt1_fastMTT = cols['pt_1']/x1
+# pt2_fastMTT = cols['pt_2']/x2
 
-pt1_fastMTT_const = cols['pt_1']/x1_const
-pt2_fastMTT_const = cols['pt_2']/x2_const
+# pt1_fastMTT_const = cols['pt_1']/x1_const
+# pt2_fastMTT_const = cols['pt_2']/x2_const
 
-mass = results_MTT['mass']
+# mass = results_MTT['mass']
 
 dpt1_kinfit = pt1/cols['genPart_pt_1']
-dpt1_FastMTT = pt1_fastMTT/cols['genPart_pt_1'] 
-dpt1_FastMTT_const = pt1_fastMTT_const/cols['genPart_pt_1']
+dpt1_FastMTT = cols['FastMTT_pt_1']/cols['genPart_pt_1'] 
+dpt1_FastMTT_const = cols['FastMTT_pt_1_constraint']/cols['genPart_pt_1']
 
 dpt2_kinfit = pt2/cols['genPart_pt_2'] 
-dpt2_FastMTT = pt2_fastMTT/cols['genPart_pt_2'] 
-dpt2_FastMTT_const = pt1_fastMTT_const/cols['genPart_pt_2']
+dpt2_FastMTT = cols['FastMTT_pt_2']/cols['genPart_pt_2'] 
+dpt2_FastMTT_const = cols['FastMTT_pt_2_constraint']/cols['genPart_pt_2']
 
 # saving to RooT file
 outputFile="kinfit_3pr_%s.root"%(args.channel)
@@ -142,7 +155,7 @@ fill_hist(hist_dpt2_FastMTT,dpt2_FastMTT)
 fill_hist(hist_dpt1_FastMTT_const,dpt1_FastMTT_const)
 fill_hist(hist_dpt2_FastMTT_const,dpt2_FastMTT_const)
 fill_hist(hist_mvis,cols['m_vis'])
-fill_hist(hist_mass_FastMTT,mass)
+# fill_hist(hist_mass_FastMTT,mass)
 
 #####################
 # saving histograms
@@ -164,3 +177,83 @@ print('')
 print('Histograms are saved in file %s'%(outputFile))
 print('')
 
+################################
+# Save new ROOT file with tree #
+################################
+
+print("\nSaving ROOT file with new columns...")
+
+from pathlib import Path
+
+# --- output path ---
+outdir = Path.cwd()
+outfile = outdir / "merged.root"
+
+# 🔒 nie nadpisuj
+if outfile.exists():
+    i = 1
+    while (outdir / f"merged_{i}.root").exists():
+        i += 1
+    outfile = outdir / f"merged_{i}.root"
+
+########################################
+# Create ROOT file and TTree manually #
+########################################
+
+import array
+
+fout = ROOT.TFile(str(outfile), "RECREATE")
+tree = ROOT.TTree("ntuple", "ntuple")
+
+# --- prepare branch buffers ---
+buffers = {}
+branches = {}
+
+skipped_cols = []
+
+for name, arr in cols.items():
+    dtype = arr.dtype
+
+    if np.issubdtype(dtype, np.floating):
+        buffers[name] = array.array('f', [0.])
+        tree.Branch(name, buffers[name], f"{name}/F")
+    elif np.issubdtype(dtype, np.integer):
+        buffers[name] = array.array('i', [0])
+        tree.Branch(name, buffers[name], f"{name}/I")
+    else:
+        # try to coerce object columns
+        try:
+            cols[name] = np.asarray(cols[name], dtype=np.int32)
+            buffers[name] = array.array('i', [0])
+            tree.Branch(name, buffers[name], f"{name}/I")
+            print(f"[WARN] coerced {name} to int32")
+        except Exception:
+            try:
+                cols[name] = np.asarray(cols[name], dtype=np.float32)
+                buffers[name] = array.array('f', [0.])
+                tree.Branch(name, buffers[name], f"{name}/F")
+                print(f"[WARN] coerced {name} to float32")
+            except Exception:
+                skipped_cols.append(name)
+                print(f"[SKIP] dropping non-numeric column: {name}")
+                continue
+
+n = len(next(iter(cols.values())))
+
+print(f"Writing {n} entries...")
+
+# --- event loop ---
+active_cols = list(buffers.keys())
+
+for i in range(n):
+    for name in active_cols:
+        buffers[name][0] = cols[name][i]
+    tree.Fill()
+
+print(f"Skipped {len(skipped_cols)} non-numeric columns: {skipped_cols}")
+
+tree.Write()
+fout.Close()
+
+print(f"✅ ROOT saved to: {outfile}")
+print("")
